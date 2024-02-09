@@ -1,0 +1,55 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #000; 
+    color: #fff; 
+}
+
+@font-face {
+    font-family: 'Pokemon';
+    src: url('fonts/Pokemon\ Solid.ttf') format('truetype');
+}
+
+h1 {
+    font-family: 'Pokemon', cursive;
+    color: #ff0; 
+}
+
+.h1, h2, p {
+    color: #fff;
+}
+
+.pokemon {
+    display: inline-block;
+    margin: 20px;
+    background-color: #222; 
+    padding: 10px;
+    border-radius: 10px; 
+    color: #fff; 
+}
+
+img {
+    width: 150px;
+    height: 150px;
+}
+
+button {
+    background-color: #f00; 
+    color: #fff; 
+    font-family: 'Press Start 2P', cursive; 
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px; 
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+button:hover {
+    background-color: #b00; 
+}
+
+#titulo {
+    font-family: 'Press Start 2P', cursive; 
+    color: #ff0; 
+    margin-bottom: 20px;
+}
