@@ -5,14 +5,73 @@ function obtenerPokemonAleatorio() {
     return Math.floor(Math.random() * 898) + 1;
 }
 
+const tipoEfectividad = {
+    normal: { rock: 0.5, ghost: 0, steel: 0.5 },
+    fire: { fire: 0.5, water: 0.5, grass: 2, ice: 2, bug: 2, rock: 0.5, dragon: 0.5, steel: 2 },
+    water: { fire: 2, water: 0.5, grass: 0.5, ground: 2, rock: 2, dragon: 0.5 },
+    electric: { water: 2, electric: 0.5, grass: 0.5, ground: 0, flying: 2, dragon: 0.5 },
+    grass: { fire: 0.5, water: 2, grass: 0.5, poison: 0.5, ground: 2, flying: 0.5, bug: 0.5, rock: 2, dragon: 0.5, steel: 0.5 },
+    ice: { fire: 0.5, water: 0.5, grass: 2, ice: 0.5, ground: 2, flying: 2, dragon: 2, steel: 0.5 },
+    fighting: { normal: 2, ice: 2, poison: 0.5, flying: 0.5, psychic: 0.5, bug: 0.5, rock: 2, ghost: 0, dark: 2, steel: 2, fairy: 0.5 },
+    poison: { grass: 2, poison: 0.5, ground: 0.5, rock: 0.5, ghost: 0.5, steel: 0, fairy: 2 },
+    ground: { fire: 2, electric: 2, grass: 0.5, poison: 2, flying: 0, bug: 0.5, rock: 2, steel: 2 },
+    flying: { electric: 0.5, grass: 2, fighting: 2, bug: 2, rock: 0.5, steel: 0.5 },
+    psychic: { fighting: 2, poison: 2, psychic: 0.5, dark: 0, steel: 0.5 },
+    bug: { fire: 0.5, grass: 2, fighting: 0.5, poison: 0.5, flying: 0.5, psychic: 2, ghost: 0.5, dark: 2, steel: 0.5, fairy: 0.5 },
+    rock: { fire: 2, ice: 2, fighting: 0.5, ground: 0.5, flying: 2, bug: 2, steel: 0.5 },
+    ghost: { normal: 0, psychic: 2, ghost: 2, dark: 0.5 },
+    dragon: { dragon: 2, steel: 0.5, fairy: 0 },
+    dark: { fighting: 0.5, psychic: 2, ghost: 2, dark: 0.5, fairy: 0.5 },
+    steel: { fire: 0.5, water: 0.5, electric: 0.5, ice: 2, rock: 2, steel: 0.5, fairy: 2 },
+    fairy: { fire: 0.5, fighting: 2, poison: 0.5, dragon: 2, dark: 2, steel: 0.5 }
+};
+
 function mostrarInformacionPokemon(id, pokemon) {
-    document.getElementById(`nombrePokemon${id}`).textContent = pokemon.name.toUpperCase();
-    document.getElementById(`imagenPokemon${id}`).src = pokemon.sprites.front_default;
-    document.getElementById(`hpPokemon${id}`).textContent = `HP: ${pokemon.stats[0].base_stat}`;
+    const nombre = document.getElementById(`nombrePokemon${id}`);
+    const imagen = document.getElementById(`imagenPokemon${id}`);
+    const hp = document.getElementById(`hpPokemon${id}`);
+    const hpBar = document.getElementById(`hpBar${id}`);
+    const tiposDiv = document.getElementById(`tipo${id}`);
+
+    nombre.textContent = pokemon.name.toUpperCase();
+    imagen.src = pokemon.sprites.front_default;
+    hp.textContent = `HP: ${pokemon.stats[0].base_stat}`;
+    hpBar.style.width = "100%";
+
+    
+    tiposDiv.innerHTML = '';
+    pokemon.types.forEach(type => {
+        const tipoSpan = document.createElement('span');
+        tipoSpan.className = `tipo ${type.type.name}`;
+        tipoSpan.textContent = type.type.name.toUpperCase();
+        tiposDiv.appendChild(tipoSpan);
+    });
 }
 
-function calcularDaño(ataque, defensa) {
-    return Math.max(ataque - defensa, 1);
+function calcularMultiplicadorTipo(tiposAtacante, tiposDefensor) {
+    let multiplicador = 1;
+    tiposAtacante.forEach(tipoAtaque => {
+        tiposDefensor.forEach(tipoDefensa => {
+            if (tipoEfectividad[tipoAtaque]?.[tipoDefensa]) {
+                multiplicador *= tipoEfectividad[tipoAtaque][tipoDefensa];
+            }
+        });
+    });
+    return multiplicador;
+}
+
+function calcularDaño(pokemon1, pokemon2) {
+    const ataque = pokemon1.stats[1].base_stat;
+    const defensa = pokemon2.stats[2].base_stat;
+    const tiposAtacante = pokemon1.types.map(t => t.type.name);
+    const tiposDefensor = pokemon2.types.map(t => t.type.name);
+    const multiplicador = calcularMultiplicadorTipo(tiposAtacante, tiposDefensor);
+    
+    const daño = Math.max(Math.floor((ataque - defensa * 0.5) * multiplicador), 1);
+    const efectividad = multiplicador > 1 ? "¡Es super efectivo!" : 
+                       multiplicador < 1 ? "No es muy efectivo..." : "";
+    
+    return { daño, efectividad };
 }
 
 let chart; 
@@ -51,29 +110,59 @@ function iniciarCombate(aleatorio) {
 }
 
 function realizarTurno(hp1, hp2, pokemons, turno) {
+    const mensajeCombate = document.getElementById('mensajeCombate');
+    
     if (hp1 <= 0 || hp2 <= 0) {
-        console.log('Combate terminado');
-        return; 
+        const ganador = hp1 > 0 ? pokemons[0].name : pokemons[1].name;
+        mensajeCombate.textContent = `¡${ganador.toUpperCase()} es el ganador!`;
+        mensajeCombate.style.animation = 'fadeIn 1s';
+        return;
     }
 
     setTimeout(() => {
-        let daño;
+        let resultado;
+        let pokemonAtacante, pokemonDefensor;
+        let hpBarAtacante, hpBarDefensor;
+        
         if (turno % 2 === 0) {
-            daño = calcularDaño(pokemons[0].stats[1].base_stat, pokemons[1].stats[2].base_stat);
-            hp2 = Math.max(0, hp2 - daño);
+            pokemonAtacante = pokemons[0];
+            pokemonDefensor = pokemons[1];
+            resultado = calcularDaño(pokemons[0], pokemons[1]);
+            hp2 = Math.max(0, hp2 - resultado.daño);
+            hpBarDefensor = document.getElementById('hpBar2');
         } else {
-            daño = calcularDaño(pokemons[1].stats[1].base_stat, pokemons[0].stats[2].base_stat);
-            hp1 = Math.max(0, hp1 - daño);
+            pokemonAtacante = pokemons[1];
+            pokemonDefensor = pokemons[0];
+            resultado = calcularDaño(pokemons[1], pokemons[0]);
+            hp1 = Math.max(0, hp1 - resultado.daño);
+            hpBarDefensor = document.getElementById('hpBar1');
         }
+
+        
+        const imgAtacante = document.getElementById(`imagenPokemon${turno % 2 === 0 ? '1' : '2'}`);
+        imgAtacante.style.animation = 'atacar 0.5s';
+        setTimeout(() => imgAtacante.style.animation = '', 500);
+
+        
+        const porcentajeHP = ((turno % 2 === 0 ? hp2 : hp1) / pokemonDefensor.stats[0].base_stat) * 100;
+        hpBarDefensor.style.width = `${porcentajeHP}%`;
+        hpBarDefensor.style.background = porcentajeHP > 50 ? '#27ae60' : 
+                                       porcentajeHP > 20 ? '#f1c40f' : '#e74c3c';
+
+        
+        mensajeCombate.textContent = `${pokemonAtacante.name.toUpperCase()} atacó a ${pokemonDefensor.name.toUpperCase()}! ${resultado.efectividad}`;
+        mensajeCombate.style.animation = 'fadeIn 0.5s';
 
         actualizarGrafico(hp1, hp2);
 
         if (hp1 > 0 && hp2 > 0) {
-            realizarTurno(hp1, hp2, pokemons, turno + 1); 
+            realizarTurno(hp1, hp2, pokemons, turno + 1);
         } else {
-            console.log('Combate terminado');
+            const ganador = hp1 > 0 ? pokemons[0].name : pokemons[1].name;
+            mensajeCombate.textContent = `¡${ganador.toUpperCase()} es el ganador!`;
+            mensajeCombate.style.animation = 'fadeIn 1s';
         }
-    }, 1000);
+    }, 1500);
 }
 
 function prepararGrafico(hp1, hp2, nombre1, nombre2) {

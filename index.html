@@ -16,16 +16,30 @@
         <input type="text" id="pokemon2Nombre" placeholder="ID o Nombre Pokémon 2">
         <button id="iniciarCombateSeleccionado">Iniciar Combate Seleccionado</button>
     </div>
-    <button id="iniciarCombateAleatorio">Iniciar Combate Aleatorio</button>
-    <div id="pokemon1" class="pokemon">
-        <h2 id="nombrePokemon1"></h2>
-        <img id="imagenPokemon1" src="" alt="Imagen Pokémon 1">
-        <p id="hpPokemon1"></p>
-    </div>
-    <div id="pokemon2" class="pokemon">
-        <h2 id="nombrePokemon2"></h2>
-        <img id="imagenPokemon2" src="" alt="Imagen Pokémon 2">
-        <p id="hpPokemon2"></p>
+    <button id="iniciarCombateAleatorio">Iniciar Combate Aleatorio</button>    <div class="battle-container">
+        <div id="pokemon1" class="pokemon">
+            <h2 id="nombrePokemon1"></h2>
+            <img id="imagenPokemon1" src="" alt="Imagen Pokémon 1">
+            <div class="hp-container">
+                <p id="hpPokemon1"></p>
+                <div class="hp-bar">
+                    <div id="hpBar1" class="hp-bar-fill"></div>
+                </div>
+            </div>
+            <div id="tipo1" class="tipos"></div>
+        </div>
+        <div id="mensajeCombate" class="mensaje-combate"></div>
+        <div id="pokemon2" class="pokemon">
+            <h2 id="nombrePokemon2"></h2>
+            <img id="imagenPokemon2" src="" alt="Imagen Pokémon 2">
+            <div class="hp-container">
+                <p id="hpPokemon2"></p>
+                <div class="hp-bar">
+                    <div id="hpBar2" class="hp-bar-fill"></div>
+                </div>
+            </div>
+            <div id="tipo2" class="tipos"></div>
+        </div>
     </div>
     <canvas id="resultadoCombate"></canvas>
     <script src="app.js"></script>
